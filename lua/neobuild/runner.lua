@@ -1,4 +1,5 @@
 local Job = require("plenary.job")
+local Popup = require("plenary.popup")
 local runner = {}
 
 -- TODO: Make class?
@@ -16,20 +17,20 @@ local runner = {}
 --}
 
 -- Create and register a new runner job
+-- TODO: Make class runner -- .run schedules jobs if one already running
 function runner.run(builder)
   local default_opts = {
     cwd = vim.loop.cwd(),
     on_start = vim.schedule_wrap(function()
-      vim.fn.setqflist({}, " ", { title = builder.name })
-      vim.api.nvim_command(string.format("%s copen %d", "botright", 15))
-      vim.api.nvim_command("wincmd p")
-      vim.notify("Executing commands...", nil, { title = builder.name })
+      -- vim.fn.setqflist({}, " ", { title = builder.name })
+      -- vim.api.nvim_command(string.format("%s copen %d", "botright", 15))
+      -- vim.api.nvim_command("wincmd p")
     end),
     on_stdout = vim.schedule_wrap(function(_, data, _)
-      vim.fn.setqflist({}, "a", { lines = { data } })
+      -- vim.fn.setqflist({}, "a", { lines = { data } })
     end),
     on_stderr = vim.schedule_wrap(function(_, data, _)
-      vim.fn.setqflist({}, "a", { lines = { data } })
+      -- vim.fn.setqflist({}, "a", { lines = { data } })
     end),
     on_exit = function(me, code, signal)
       vim.notify(
@@ -53,6 +54,7 @@ function runner.run(builder)
   end
 
   job:start()
+  vim.notify(vim.inspect(job))
 end
 
 

@@ -1,43 +1,44 @@
+local scan = require("plenary.scandir")
+
 local adapter = {
   modules = {
     require("neobuild.adapter.cmake"),
-  }
+    require("neobuild.adapter.bitbake"),
+  },
 }
 
-function adapter.ls(path, fn)
-  -- Borrowed from https://github.com/folke/lazy.nvim
-  local handle = vim.loop.fs_scandir(path)
-  while handle do
-    local name, t = vim.loop.fs_scandir_next(handle)
+-- TODO: Move to library
+function adapter.ls(path)
+  local results = {}
 
-    if not name then
-      break
-    end
+  scan.scan_dir(path, {
+    hidden = true,
+    depth = 1,
+    add_dirs = true,
+    on_insert = function(entry)
+      results[#results+1] = vim.fs.basename(entry)
+    end,
+  })
 
-    local fname = path .. "/" .. name
-
-    -- HACK: type is not always returned due to a bug in luv,
-    -- so fecth it with fs_stat instead when needed.
-    -- see https://github.com/folke/lazy.nvim/issues/306
-    if fn(fname, name, t or vim.loop.fs_stat(fname).type) == false then
-      break
-    end
-  end
+  return results
 end
 
-function adapter.match()
+function adapter.discover()
   local match = {}
-  local ls = {}
-
-  adapter.ls(vim.loop.cwd(), function(_, name, _)
-      ls[#ls + 1] = name
-  end)
+  local root_patterns = adapter.ls(vim.loop.cwd())
 
   for _, mod in pairs(adapter.modules) do
+    local contains_pattern = false
+
     for _, entry in pairs(mod.root()) do
-      if vim.tbl_contains(ls, entry) then
-        match[#match+1] = mod
+      if vim.tbl_contains(root_patterns, entry) then
+        contains_pattern = true
+        break
       end
+    end
+
+    if contains_pattern then
+      match[#match + 1] = mod
     end
   end
 

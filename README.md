@@ -66,11 +66,11 @@ TODO
 ## 🚀 Usage
 
 ```lua
--- configure
+-- configure/initialize build system
 require('neobuild').configure()
 -- build
-require('neobuild').build()  -- default: all
-require('neobuild').build({ target = 'all|file'})
--- summary
-require('neobuild').summary()
+require('neobuild').build()  -- Build the default target
+require('neobuild').build(vim.fn.expand('%')) -- Build the current file
+-- Clean
+require('neobuild').clean()
 ```
